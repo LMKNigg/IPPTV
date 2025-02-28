@@ -67,7 +67,8 @@
         <div class="channel-list" id="channelList"></div>
         <div class="video-container" id="videoContainer">
             <iframe class="video" marginheight="0" marginwidth="0" name="iframe_a" 
-                scrolling="no" allowfullscreen="yes" frameborder="0">
+                scrolling="no" allowfullscreen="yes" frameborder="0" 
+                allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin">
                 Your Browser Does Not Support Iframe
             </iframe>
         </div>
@@ -111,18 +112,17 @@
             channels.forEach((channel, index) => {
                 const channelItem = document.createElement("div");
                 channelItem.classList.add("channel-item");
-                channelItem.textContent = channel.name; // Use custom name
+                channelItem.textContent = channel.name;
                 channelItem.dataset.number = channel.number;
 
                 channelItem.addEventListener("click", () => {
-                    // Remove active class from all items
                     document.querySelectorAll(".channel-item").forEach(item => {
                         item.classList.remove("active");
                     });
-                    // Add active class to clicked item
                     channelItem.classList.add("active");
-                    // Update video source
                     videoIframe.src = `${baseUrl}${channel.number}.php`;
+                    // Attempt to trigger playback (iOS workaround)
+                    videoIframe.contentWindow.postMessage('play', '*');
                 });
 
                 channelList.appendChild(channelItem);
