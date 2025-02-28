@@ -19,7 +19,7 @@
             overflow: hidden;
         }
         .channel-list {
-            width: 200px;
+            width: 250px;
             background: #333;
             color: white;
             overflow-y: auto;
@@ -29,12 +29,17 @@
             padding: 10px;
             cursor: pointer;
             border-bottom: 1px solid #444;
+            outline: none;
         }
         .channel-item:hover {
             background: #555;
         }
         .channel-item.active {
             background: #007bff;
+        }
+        .channel-item:focus {
+            background: #666;
+            box-shadow: 0 0 5px #fff;
         }
         .video-container {
             flex: 1;
@@ -106,6 +111,7 @@
 
         const channelList = document.getElementById("channelList");
         const videoIframe = document.querySelector(".video");
+        let currentFocusIndex = 0; // Track the focused item
 
         // Function to create channel list
         function populateChannelList() {
@@ -114,15 +120,11 @@
                 channelItem.classList.add("channel-item");
                 channelItem.textContent = channel.name;
                 channelItem.dataset.number = channel.number;
+                channelItem.tabIndex = 0; // Make focusable
 
+                // Click handler (mouse/remote OK)
                 channelItem.addEventListener("click", () => {
-                    document.querySelectorAll(".channel-item").forEach(item => {
-                        item.classList.remove("active");
-                    });
-                    channelItem.classList.add("active");
-                    videoIframe.src = `${baseUrl}${channel.number}.php`;
-                    // Attempt to trigger playback (iOS workaround)
-                    videoIframe.contentWindow.postMessage('play', '*');
+                    selectChannel(index);
                 });
 
                 channelList.appendChild(channelItem);
@@ -130,10 +132,51 @@
 
             // Set first channel as default
             if (channels.length > 0) {
-                channelList.children[0].classList.add("active");
+                const firstItem = channelList.children[0];
+                firstItem.classList.add("active");
                 videoIframe.src = `${baseUrl}${channels[0].number}.php`;
+                firstItem.focus(); // Set initial focus
             }
         }
+
+        // Function to select a channel
+        function selectChannel(index) {
+            document.querySelectorAll(".channel-item").forEach(item => {
+                item.classList.remove("active");
+            });
+            const selectedItem = channelList.children[index];
+            selectedItem.classList.add("active");
+            videoIframe.src = `${baseUrl}${channels[index].number}.php`;
+            currentFocusIndex = index;
+            selectedItem.focus(); // Ensure focus stays on selected item
+        }
+
+        // Function to move focus
+        function moveFocus(direction) {
+            currentFocusIndex += direction;
+            if (currentFocusIndex < 0) currentFocusIndex = 0;
+            if (currentFocusIndex >= channels.length) currentFocusIndex = channels.length - 1;
+            channelList.children[currentFocusIndex].focus();
+        }
+
+        // Global keydown handler on document
+        document.addEventListener("keydown", (e) => {
+            switch (e.key) {
+                case "ArrowDown":
+                    e.preventDefault();
+                    moveFocus(1);
+                    break;
+                case "ArrowUp":
+                    e.preventDefault();
+                    moveFocus(-1);
+                    break;
+                case "Enter":
+                case " ":
+                    e.preventDefault();
+                    selectChannel(currentFocusIndex);
+                    break;
+            }
+        });
 
         // Initialize the channel list
         populateChannelList();
