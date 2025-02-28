@@ -53,14 +53,6 @@
             top: 0;
             left: 0;
         }
-        .video-container.loading::after {
-            content: "Loading...";
-            color: white;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -79,9 +71,11 @@
     <div class="container">
         <div class="channel-list" id="channelList"></div>
         <div class="video-container" id="videoContainer">
-            <!-- Replaced iframe with video tag for WebOS compatibility -->
-            <video class="video" controls autoplay playsinline 
-                   preload="auto" muted="muted"></video>
+            <iframe class="video" marginheight="0" marginwidth="0" name="iframe_a" 
+                scrolling="no" allowfullscreen="yes" frameborder="0" 
+                allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin">
+                Your Browser Does Not Support Iframe
+            </iframe>
         </div>
     </div>
 
@@ -116,9 +110,8 @@
         ];
 
         const channelList = document.getElementById("channelList");
-        const videoContainer = document.getElementById("videoContainer");
-        const videoElement = document.querySelector(".video"); // Changed to video element
-        let currentFocusIndex = 0;
+        const videoIframe = document.querySelector(".video");
+        let currentFocusIndex = 0; // Track the focused item
 
         // Function to create channel list
         function populateChannelList() {
@@ -127,8 +120,9 @@
                 channelItem.classList.add("channel-item");
                 channelItem.textContent = channel.name;
                 channelItem.dataset.number = channel.number;
-                channelItem.tabIndex = 0;
+                channelItem.tabIndex = 0; // Make focusable
 
+                // Click handler (mouse/remote OK)
                 channelItem.addEventListener("click", () => {
                     selectChannel(index);
                 });
@@ -136,29 +130,13 @@
                 channelList.appendChild(channelItem);
             });
 
+            // Set first channel as default
             if (channels.length > 0) {
                 const firstItem = channelList.children[0];
                 firstItem.classList.add("active");
-                loadVideo(channels[0].number); // Use loadVideo function
-                firstItem.focus();
+                videoIframe.src = `${baseUrl}${channels[0].number}.php`;
+                firstItem.focus(); // Set initial focus
             }
-        }
-
-        // Function to load video with error handling
-        function loadVideo(channelNumber) {
-            videoContainer.classList.add("loading");
-            videoElement.src = `${baseUrl}${channelNumber}.php`;
-
-            videoElement.onloadeddata = () => {
-                videoContainer.classList.remove("loading");
-                videoElement.play().catch(err => console.error("Autoplay failed:", err));
-            };
-
-            videoElement.onerror = () => {
-                videoContainer.classList.remove("loading");
-                videoContainer.innerHTML += '<p style="color: white; text-align: center;">Error loading stream</p>';
-                console.error(`Failed to load stream: ${baseUrl}${channelNumber}.php`);
-            };
         }
 
         // Function to select a channel
@@ -168,9 +146,9 @@
             });
             const selectedItem = channelList.children[index];
             selectedItem.classList.add("active");
-            loadVideo(channels[index].number); // Use loadVideo instead of direct src
+            videoIframe.src = `${baseUrl}${channels[index].number}.php`;
             currentFocusIndex = index;
-            selectedItem.focus();
+            selectedItem.focus(); // Ensure focus stays on selected item
         }
 
         // Function to move focus
@@ -181,7 +159,7 @@
             channelList.children[currentFocusIndex].focus();
         }
 
-        // Global keydown handler
+        // Global keydown handler on document
         document.addEventListener("keydown", (e) => {
             switch (e.key) {
                 case "ArrowDown":
@@ -197,13 +175,6 @@
                     e.preventDefault();
                     selectChannel(currentFocusIndex);
                     break;
-            }
-        });
-
-        // WebOS-specific: Ensure video plays when app is focused
-        window.addEventListener("focus", () => {
-            if (videoElement.src) {
-                videoElement.play().catch(err => console.error("Play on focus failed:", err));
             }
         });
 
