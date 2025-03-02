@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Channel Video Player</title>
+    <title>Live PT</title>
     <style>
         body {
             margin: 0;
@@ -19,27 +19,78 @@
             overflow: hidden;
         }
         .channel-list {
-            width: 250px;
-            background: #333;
+            width: 250px; /* Slightly wider for a more spacious feel */
+            background: #333; /* Dark background, consistent with TiViMate */
             color: white;
-            overflow-y: auto;
-            padding: 10px;
+            overflow-y: auto; /* Maintain scrollability */
+            padding: 16px; /* More padding for a polished look */
+            border-radius: 0 0 0 20px; /* Rounded top-left corner to match channel items */
+            box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2); /* Shadow on the right edge for depth */
         }
         .channel-item {
-            padding: 10px;
+            padding: 12px 16px; /* Increased padding for a larger, touch-friendly button */
             cursor: pointer;
-            border-bottom: 1px solid #444;
-            outline: none;
+            border-radius: 20px; /* Rounded corners for a modern, Apple TV-like look */
+            margin: 8px 0; /* Spacing between items for a clean, spaced-out appearance */
+            background: linear-gradient(135deg, #444, #555); /* Slightly darker background for contrast */
+            color: white;
+            font-size: 16px; /* Larger text for better readability */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth, like Apple TV */
+            transition: background 0.3s, transform 0.1s; /* Smooth transitions for hover/active states */
+            text-align: left; /* Align text to the left for a clean look */
+            overflow: hidden; /* Prevent text overflow */
         }
         .channel-item:hover {
-            background: #555;
+            background: #555; /* Slightly lighter on hover, like TiViMate hover effects */
+            transform: translateY(-2px); /* Slight lift effect on hover, Apple TV-inspired */
         }
         .channel-item.active {
-            background: #007bff;
+            background: #007bff; /* Bright blue for active state, matching Apple TV focus */
+            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3); /* Enhanced shadow for active state */
+            transform: scale(1.05) translateY(-2px); /* Slight zoom and lift effect for focus state */
         }
         .channel-item:focus {
-            background: #666;
-            box-shadow: 0 0 5px #fff;
+            outline: 2px solid #007bff; /* Visible focus outline, matching active state */
+            background: #555; /* Highlight on focus for keyboard/remote navigation */
+            transform: scale(1.05) translateY(-2px); /* Slight zoom and lift effect for focus state */
+        }
+        .error-message {
+            z-index: 10; /* Ensure it appears above other elements */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 16px;
+            border-radius: 10px;
+            display: none; /* Hidden by default until an error occurs */
+        }
+        .fullscreen-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: none;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .fullscreen-button:hover {
+            background: #0056b3;
+        }
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 10px;
+            display: none; /* Hidden by default */
         }
         .video-container {
             flex: 1;
@@ -71,18 +122,18 @@
     <div class="container">
         <div class="channel-list" id="channelList"></div>
         <div class="video-container" id="videoContainer">
-            <iframe class="video" marginheight="0" marginwidth="0" name="iframe_a" 
-                scrolling="no" allowfullscreen="yes" frameborder="0" 
-                allow="autoplay; encrypted-media" sandbox="allow-scripts allow-same-origin">
+            <iframe class="video" src="" width="100%" height="100%" allowfullscreen frameborder="0" style="border: none;" loading="lazy">
                 Your Browser Does Not Support Iframe
             </iframe>
+            <button id="fullscreenButton" class="fullscreen-button">Fullscreen</button>
+            <div class="loading-spinner" id="loadingSpinner">Loading...</div>
         </div>
     </div>
 
     <script>
         // Base URL for streams
         const baseUrl = "https://thedaddy.to/embed/stream-";
-
+        
         // List of channels with custom names and numbers
         const channels = [
             { number: 717, name: "AXN Movies" },
@@ -108,37 +159,40 @@
             { number: 723, name: "TVI" },
             { number: 724, name: "TVI Reality" }
         ];
-
+        
         const channelList = document.getElementById("channelList");
         const videoIframe = document.querySelector(".video");
-        let currentFocusIndex = 0; // Track the focused item
-
+        const videoContainer = document.getElementById("videoContainer"); // Add this line
+        let currentIndex = 0; // Track the currently selected channel
+        
         // Function to create channel list
         function populateChannelList() {
             channels.forEach((channel, index) => {
                 const channelItem = document.createElement("div");
                 channelItem.classList.add("channel-item");
-                channelItem.textContent = channel.name;
+                channelItem.textContent = channel.name; // Use custom name
                 channelItem.dataset.number = channel.number;
-                channelItem.tabIndex = 0; // Make focusable
+                channelItem.dataset.index = index; // Add index for keyboard navigation
+                channelItem.setAttribute("tabindex", "0"); // Make the item focusable
 
-                // Click handler (mouse/remote OK)
                 channelItem.addEventListener("click", () => {
                     selectChannel(index);
-                });
+                }); // Re-add this
 
+                channelItem.addEventListener("touchstart", (e) => {
+                    e.preventDefault(); // Prevent default touch behavior
+                    selectChannel(index);
+                });
+                
                 channelList.appendChild(channelItem);
             });
-
+            
             // Set first channel as default
             if (channels.length > 0) {
-                const firstItem = channelList.children[0];
-                firstItem.classList.add("active");
-                videoIframe.src = `${baseUrl}${channels[0].number}.php`;
-                firstItem.focus(); // Set initial focus
+                selectChannel(0); // Highlight and load the first channel
             }
         }
-
+        
         // Function to select a channel
         function selectChannel(index) {
             document.querySelectorAll(".channel-item").forEach(item => {
@@ -146,40 +200,83 @@
             });
             const selectedItem = channelList.children[index];
             selectedItem.classList.add("active");
-            videoIframe.src = `${baseUrl}${channels[index].number}.php`;
-            currentFocusIndex = index;
-            selectedItem.focus(); // Ensure focus stays on selected item
-        }
+            currentIndex = index;
+            const loadingSpinner = document.getElementById("loadingSpinner");
+            // const videoIframe = document.querySelector(".video"); // Remove this line
+            const errorMessage = document.createElement("div"); // Create error message element
+            errorMessage.className = "error-message";
+            errorMessage.textContent = "Failed to load stream. Please check your connection or try again later.";
+            errorMessage.style.display = "none";
+            errorMessage.style.position = "absolute";
+            errorMessage.style.top = "50%";
+            errorMessage.style.left = "50%";
+            errorMessage.style.transform = "translate(-50%, -50%)";
+            errorMessage.style.background = "rgba(0, 0, 0, 0.8)";
+            errorMessage.style.color = "white";
+            errorMessage.style.padding = "16px";
+            errorMessage.style.borderRadius = "10px";
+            videoContainer.appendChild(errorMessage); // Use videoContainer here
 
-        // Function to move focus
-        function moveFocus(direction) {
-            currentFocusIndex += direction;
-            if (currentFocusIndex < 0) currentFocusIndex = 0;
-            if (currentFocusIndex >= channels.length) currentFocusIndex = channels.length - 1;
-            channelList.children[currentFocusIndex].focus();
+            // Show loading spinner
+            loadingSpinner.style.display = "block";
+            // Temporarily clear the src to free resources
+            videoIframe.src = "";
+            // Set new src after a small delay to ensure resources are cleared
+            setTimeout(() => {
+                videoIframe.src = `${baseUrl}${channels[index].number}.php`;
+            }, 100); // Increased to 200ms for reliability
+            // Hide loading spinner when the iframe loads
+            videoIframe.onload = () => {
+                loadingSpinner.style.display = "none";
+                errorMessage.style.display = "none";
+            };
+            
+            videoIframe.onerror = () => {
+                loadingSpinner.style.display = "none";
+                errorMessage.style.display = "block"; // Show error if load fails
+            };
         }
-
-        // Global keydown handler on document
-        document.addEventListener("keydown", (e) => {
-            switch (e.key) {
-                case "ArrowDown":
-                    e.preventDefault();
-                    moveFocus(1);
-                    break;
+        
+        // Add keyboard event listener
+        document.addEventListener("keydown", (event) => {
+            switch (event.key) {
                 case "ArrowUp":
-                    e.preventDefault();
-                    moveFocus(-1);
+                    event.preventDefault(); // Prevent scrolling the page
+                    if (currentIndex > 0) {
+                        selectChannel(currentIndex - 1);
+                    }
+                    break;
+                case "ArrowDown":
+                    event.preventDefault(); // Prevent scrolling the page
+                    if (currentIndex < channels.length - 1) {
+                        selectChannel(currentIndex + 1);
+                    }
                     break;
                 case "Enter":
-                case " ":
-                    e.preventDefault();
-                    selectChannel(currentFocusIndex);
+                    event.preventDefault(); // Prevent default form submission or other actions
+                    selectChannel(currentIndex); // Re-load the current channel (if needed)
                     break;
             }
         });
-
+        
         // Initialize the channel list
         populateChannelList();
+        
+        // Fullscreen toggle functionality
+        const fullscreenButton = document.getElementById("fullscreenButton");
+        // const videoIframe = document.querySelector(".video"); // Remove this if reusing the earlier declaration
+
+        fullscreenButton.addEventListener("click", () => {
+            if (videoIframe.requestFullscreen) {
+                videoIframe.requestFullscreen();
+            } else if (videoIframe.mozRequestFullScreen) { // Firefox
+                videoIframe.mozRequestFullScreen();
+            } else if (videoIframe.webkitRequestFullscreen) { // Chrome/Safari
+                videoIframe.webkitRequestFullscreen();
+            } else if (videoIframe.msRequestFullscreen) { // IE/Edge
+                videoIframe.msRequestFullscreen();
+            }
+        });
     </script>
 </body>
 </html>
