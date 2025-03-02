@@ -162,7 +162,7 @@
         
         const channelList = document.getElementById("channelList");
         const videoIframe = document.querySelector(".video");
-        const videoContainer = document.getElementById("videoContainer"); // Add this line
+        const videoContainer = document.getElementById("videoContainer");
         let currentIndex = 0; // Track the currently selected channel
         
         // Function to create channel list
@@ -174,11 +174,11 @@
                 channelItem.dataset.number = channel.number;
                 channelItem.dataset.index = index; // Add index for keyboard navigation
                 channelItem.setAttribute("tabindex", "0"); // Make the item focusable
-
+                
                 channelItem.addEventListener("click", () => {
                     selectChannel(index);
-                }); // Re-add this
-
+                });
+                
                 channelItem.addEventListener("touchstart", (e) => {
                     e.preventDefault(); // Prevent default touch behavior
                     selectChannel(index);
@@ -195,14 +195,19 @@
         
         // Function to select a channel
         function selectChannel(index) {
+            // Remove active class from all items
             document.querySelectorAll(".channel-item").forEach(item => {
                 item.classList.remove("active");
             });
+            // Add active class to the selected item
             const selectedItem = channelList.children[index];
+            if (!selectedItem) {
+                console.error("Selected item not found at index:", index);
+                return; // Prevent errors if index is invalid
+            }
             selectedItem.classList.add("active");
             currentIndex = index;
             const loadingSpinner = document.getElementById("loadingSpinner");
-            // const videoIframe = document.querySelector(".video"); // Remove this line
             const errorMessage = document.createElement("div"); // Create error message element
             errorMessage.className = "error-message";
             errorMessage.textContent = "Failed to load stream. Please check your connection or try again later.";
@@ -215,8 +220,8 @@
             errorMessage.style.color = "white";
             errorMessage.style.padding = "16px";
             errorMessage.style.borderRadius = "10px";
-            videoContainer.appendChild(errorMessage); // Use videoContainer here
-
+            videoContainer.appendChild(errorMessage);
+            
             // Show loading spinner
             loadingSpinner.style.display = "block";
             // Temporarily clear the src to free resources
@@ -224,7 +229,7 @@
             // Set new src after a small delay to ensure resources are cleared
             setTimeout(() => {
                 videoIframe.src = `${baseUrl}${channels[index].number}.php`;
-            }, 100); // Increased to 200ms for reliability
+            }, 200); // Increased to 200ms for reliability
             // Hide loading spinner when the iframe loads
             videoIframe.onload = () => {
                 loadingSpinner.style.display = "none";
@@ -235,6 +240,14 @@
                 loadingSpinner.style.display = "none";
                 errorMessage.style.display = "block"; // Show error if load fails
             };
+            
+            // Scroll the selected item into view with more robust options
+            selectedItem.scrollIntoView({
+                behavior: "smooth", // Smooth scrolling animation
+                block: "nearest",   // Scrolls the item to the nearest edge (top or bottom)
+                inline: "nearest"   // Ensures horizontal scrolling if needed (unlikely in this vertical list)
+            });
+            console.log("Scrolled to channel:", channels[index].name, "at index:", index); // Debug log
         }
         
         // Add keyboard event listener
@@ -264,8 +277,7 @@
         
         // Fullscreen toggle functionality
         const fullscreenButton = document.getElementById("fullscreenButton");
-        // const videoIframe = document.querySelector(".video"); // Remove this if reusing the earlier declaration
-
+        
         fullscreenButton.addEventListener("click", () => {
             if (videoIframe.requestFullscreen) {
                 videoIframe.requestFullscreen();
