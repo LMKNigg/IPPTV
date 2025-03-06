@@ -19,43 +19,43 @@
             overflow: hidden;
         }
         .channel-list {
-            width: 250px; /* Slightly wider for a more spacious feel */
-            background: #333; /* Dark background, consistent with TiViMate */
+            width: 250px;
+            background: #333;
             color: white;
-            overflow-y: auto; /* Maintain scrollability */
-            padding: 16px; /* More padding for a polished look */
-            border-radius: 0 0 0 20px; /* Rounded top-left corner to match channel items */
-            box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2); /* Shadow on the right edge for depth */
+            overflow-y: auto;
+            padding: 16px;
+            border-radius: 0 0 0 20px;
+            box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2);
         }
         .channel-item {
-            padding: 12px 16px; /* Increased padding for a larger, touch-friendly button */
+            padding: 12px 16px;
             cursor: pointer;
-            border-radius: 20px; /* Rounded corners for a modern, Apple TV-like look */
-            margin: 8px 0; /* Spacing between items for a clean, spaced-out appearance */
-            background: linear-gradient(135deg, #444, #555); /* Slightly darker background for contrast */
+            border-radius: 20px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #444, #555);
             color: white;
-            font-size: 16px; /* Larger text for better readability */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth, like Apple TV */
-            transition: background 0.3s, transform 0.1s; /* Smooth transitions for hover/active states */
-            text-align: left; /* Align text to the left for a clean look */
-            overflow: hidden; /* Prevent text overflow */
+            font-size: 16px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s, transform 0.1s;
+            text-align: left;
+            overflow: hidden;
         }
         .channel-item:hover {
-            background: #555; /* Slightly lighter on hover, like TiViMate hover effects */
-            transform: translateY(-2px); /* Slight lift effect on hover, Apple TV-inspired */
+            background: #555;
+            transform: translateY(-2px);
         }
         .channel-item.active {
-            background: #007bff; /* Bright blue for active state, matching Apple TV focus */
-            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3); /* Enhanced shadow for active state */
-            transform: scale(1.05) translateY(-2px); /* Slight zoom and lift effect for focus state */
+            background: #007bff;
+            box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+            transform: scale(1.05) translateY(-2px);
         }
         .channel-item:focus {
-            outline: 2px solid #007bff; /* Visible focus outline, matching active state */
-            background: #555; /* Highlight on focus for keyboard/remote navigation */
-            transform: scale(1.05) translateY(-2px); /* Slight zoom and lift effect for focus state */
+            outline: 2px solid #007bff;
+            background: #555;
+            transform: scale(1.05) translateY(-2px);
         }
         .error-message {
-            z-index: 10; /* Ensure it appears above other elements */
+            z-index: 10;
             position: absolute;
             top: 50%;
             left: 50%;
@@ -64,7 +64,7 @@
             color: white;
             padding: 16px;
             border-radius: 10px;
-            display: none; /* Hidden by default until an error occurs */
+            display: none;
         }
         .fullscreen-button {
             position: absolute;
@@ -73,18 +73,18 @@
             padding: 8px 16px;
             border-radius: 10px;
             border: none;
-            background: #b0b0b0; /* Gray background matching the image */
-            color: #000000; /* Black text for the label */
+            background: #b0b0b0;
+            color: #000000;
             cursor: pointer;
             z-index: 10;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* Match Apple-style font */
-            font-size: 14px; /* Adjust font size to match the image (if needed) */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 8px; /* Space between icon and text */
+            gap: 8px;
         }
         .fullscreen-button:hover {
-            background: #a0a0a0; /* Slightly darker gray on hover for subtle interaction */
+            background: #a0a0a0;
         }
         .loading-spinner {
             position: absolute;
@@ -95,7 +95,7 @@
             color: white;
             padding: 16px 24px;
             border-radius: 10px;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .video-container {
             flex: 1;
@@ -127,7 +127,7 @@
     <div class="container">
         <div class="channel-list" id="channelList"></div>
         <div class="video-container" id="videoContainer">
-            <iframe class="video" src="" width="100%" height="100%" allowfullscreen frameborder="0" style="border: none;" loading="lazy">
+            <iframe class="video" src="" width="100%" height="100%" allowfullscreen frameborder="0" style="border: none;" loading="lazy" allow="autoplay; encrypted-media">
                 Your Browser Does Not Support Iframe
             </iframe>
             <button id="fullscreenButton" class="fullscreen-button">Fullscreen</button>
@@ -136,10 +136,7 @@
     </div>
 
     <script>
-        // Base URL for streams
         const baseUrl = "https://thedaddy.to/embed/stream-";
-        
-        // List of channels with custom names and numbers
         const channels = [
             { number: 717, name: "AXN Movies" },
             { number: 380, name: "Benfica TV" },
@@ -164,136 +161,120 @@
             { number: 723, name: "TVI" },
             { number: 724, name: "TVI Reality" }
         ];
-        
+
         const channelList = document.getElementById("channelList");
-        const videoIframe = document.querySelector(".video");
         const videoContainer = document.getElementById("videoContainer");
-        let currentIndex = 0; // Track the currently selected channel
-        
-        // Function to create channel list
+        let videoIframe = document.querySelector(".video");
+        let currentIndex = 0;
+
         function populateChannelList() {
             channels.forEach((channel, index) => {
                 const channelItem = document.createElement("div");
                 channelItem.classList.add("channel-item");
-                channelItem.textContent = channel.name; // Use custom name
+                channelItem.textContent = channel.name;
                 channelItem.dataset.number = channel.number;
-                channelItem.dataset.index = index; // Add index for keyboard navigation
-                channelItem.setAttribute("tabindex", "0"); // Make the item focusable
-                
+                channelItem.dataset.index = index;
+                channelItem.setAttribute("tabindex", "0");
+
                 channelItem.addEventListener("click", () => {
                     selectChannel(index);
                 });
-                
+
                 channelItem.addEventListener("touchstart", (e) => {
-                    e.preventDefault(); // Prevent default touch behavior
+                    e.preventDefault();
                     selectChannel(index);
                 });
-                
+
                 channelList.appendChild(channelItem);
             });
-            
-            // Set first channel as default
+
             if (channels.length > 0) {
-                selectChannel(0); // Highlight and load the first channel
+                selectChannel(0); // Load first channel
             }
         }
-        
-        // Function to select a channel
+
         function selectChannel(index) {
-            // Remove active class from all items
             document.querySelectorAll(".channel-item").forEach(item => {
                 item.classList.remove("active");
             });
-            // Add active class to the selected item
             const selectedItem = channelList.children[index];
             if (!selectedItem) {
                 console.error("Selected item not found at index:", index);
-                return; // Prevent errors if index is invalid
+                return;
             }
             selectedItem.classList.add("active");
             currentIndex = index;
+
             const loadingSpinner = document.getElementById("loadingSpinner");
-            const errorMessage = document.createElement("div"); // Create error message element
-            errorMessage.className = "error-message";
-            errorMessage.textContent = "Failed to load stream. Please check your connection or try again later.";
-            errorMessage.style.display = "none";
-            errorMessage.style.position = "absolute";
-            errorMessage.style.top = "50%";
-            errorMessage.style.left = "50%";
-            errorMessage.style.transform = "translate(-50%, -50%)";
-            errorMessage.style.background = "rgba(0, 0, 0, 0.8)";
-            errorMessage.style.color = "white";
-            errorMessage.style.padding = "16px";
-            errorMessage.style.borderRadius = "10px";
-            videoContainer.appendChild(errorMessage);
-            
-            // Show loading spinner
             loadingSpinner.style.display = "block";
-            // Temporarily clear the src to free resources
-            videoIframe.src = "";
-            // Set new src after a small delay to ensure resources are cleared
+
+            // Create a new iframe to ensure fresh load
+            const oldIframe = videoIframe;
+            const newIframe = document.createElement("iframe");
+            newIframe.className = "video";
+            newIframe.width = "100%";
+            newIframe.height = "100%";
+            newIframe.allowFullscreen = true;
+            newIframe.frameBorder = "0";
+            newIframe.style.border = "none";
+            newIframe.loading = "lazy";
+            newIframe.allow = "autoplay; encrypted-media";
+
+            videoContainer.replaceChild(newIframe, oldIframe);
+            videoIframe = newIframe;
+
             setTimeout(() => {
                 videoIframe.src = `${baseUrl}${channels[index].number}.php`;
-            }, 200); // Increased to 200ms for reliability
-            // Hide loading spinner when the iframe loads
+            }, 500); // 500ms delay for Safari compatibility
+
             videoIframe.onload = () => {
                 loadingSpinner.style.display = "none";
-                errorMessage.style.display = "none";
             };
-            
             videoIframe.onerror = () => {
                 loadingSpinner.style.display = "none";
-                errorMessage.style.display = "block"; // Show error if load fails
+                console.log("Iframe load failed for channel:", channels[index].name);
             };
-            
-            // Scroll the selected item into view with more robust options
-            selectedItem.scrollIntoView({
-                behavior: "smooth", // Smooth scrolling animation
-                block: "nearest",   // Scrolls the item to the nearest edge (top or bottom)
-                inline: "nearest"   // Ensures horizontal scrolling if needed (unlikely in this vertical list)
-            });
-            console.log("Scrolled to channel:", channels[index].name, "at index:", index); // Debug log
+
+            selectedItem.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
         }
-        
-        // Add keyboard event listener
+
         document.addEventListener("keydown", (event) => {
             switch (event.key) {
                 case "ArrowUp":
-                    event.preventDefault(); // Prevent scrolling the page
+                    event.preventDefault();
                     if (currentIndex > 0) {
                         selectChannel(currentIndex - 1);
                     }
                     break;
                 case "ArrowDown":
-                    event.preventDefault(); // Prevent scrolling the page
+                    event.preventDefault();
                     if (currentIndex < channels.length - 1) {
                         selectChannel(currentIndex + 1);
                     }
                     break;
                 case "Enter":
-                    event.preventDefault(); // Prevent default form submission or other actions
-                    selectChannel(currentIndex); // Re-load the current channel (if needed)
+                    event.preventDefault();
+                    selectChannel(currentIndex);
                     break;
             }
         });
-        
-        // Initialize the channel list
-        populateChannelList();
-        
-        // Fullscreen toggle functionality
+
+        // Fullscreen functionality
         const fullscreenButton = document.getElementById("fullscreenButton");
-        
         fullscreenButton.addEventListener("click", () => {
             if (videoIframe.requestFullscreen) {
                 videoIframe.requestFullscreen();
-            } else if (videoIframe.mozRequestFullScreen) { // Firefox
+            } else if (videoIframe.mozRequestFullScreen) {
                 videoIframe.mozRequestFullScreen();
-            } else if (videoIframe.webkitRequestFullscreen) { // Chrome/Safari
+            } else if (videoIframe.webkitRequestFullscreen) {
                 videoIframe.webkitRequestFullscreen();
-            } else if (videoIframe.msRequestFullscreen) { // IE/Edge
+            } else if (videoIframe.msRequestFullscreen) {
                 videoIframe.msRequestFullscreen();
             }
         });
+
+        // Initialize
+        populateChannelList();
     </script>
 </body>
 </html>
